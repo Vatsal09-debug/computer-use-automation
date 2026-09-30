@@ -11,9 +11,13 @@ async def test_human_takes_over_same_live_session() -> None:
     recipe = build_lookup_member_balance_recipe()
 
     async with async_playwright() as playwright:
+        import os
+
+        executable_path = os.getenv("PLAYWRIGHT_EXECUTABLE_PATH") or None
+
         browser = await playwright.chromium.launch(
             headless=True,
-            executable_path="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            executable_path=executable_path,
         )
         page = await browser.new_page()
         await page.goto("http://localhost:5173")

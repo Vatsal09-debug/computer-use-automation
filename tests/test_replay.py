@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import pytest
 from playwright.async_api import async_playwright
@@ -23,7 +24,7 @@ async def test_lookup_member_balance_replay(
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(
         headless=True,
-        executable_path="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        executable_path=os.getenv("PLAYWRIGHT_EXECUTABLE_PATH") or None,
         ) 
         page = await browser.new_page()
 
@@ -82,9 +83,13 @@ async def test_replay_wait_timeout_is_recoverable() -> None:
     )
 
     async with async_playwright() as playwright:
+        import os
+
+        executable_path = os.getenv("PLAYWRIGHT_EXECUTABLE_PATH") or None
+
         browser = await playwright.chromium.launch(
             headless=True,
-            executable_path="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            executable_path=executable_path,
         )
         page = await browser.new_page()
         await page.goto("http://localhost:5173")
@@ -131,9 +136,13 @@ async def test_replay_hard_failure_captures_evidence() -> None:
     )
 
     async with async_playwright() as playwright:
+        import os
+
+        executable_path = os.getenv("PLAYWRIGHT_EXECUTABLE_PATH") or None
+
         browser = await playwright.chromium.launch(
             headless=True,
-            executable_path="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            executable_path=executable_path,
         )
         page = await browser.new_page()
         await page.goto("http://localhost:5173")
@@ -160,9 +169,13 @@ async def test_replay_blocks_disallowed_action() -> None:
     )
 
     async with async_playwright() as playwright:
+        import os
+
+        executable_path = os.getenv("PLAYWRIGHT_EXECUTABLE_PATH") or None
+
         browser = await playwright.chromium.launch(
             headless=True,
-            executable_path="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            executable_path=executable_path,
         )
         page = await browser.new_page()
         await page.goto("http://localhost:5173")

@@ -1,10 +1,13 @@
+import os
 from dataclasses import dataclass
 from urllib.parse import urlparse
 
 
 @dataclass(frozen=True)
 class SafetyPolicy:
-    allowed_hosts: frozenset[str] = frozenset({"localhost:5173"})
+    allowed_hosts: frozenset[str] = frozenset(
+        {urlparse(os.getenv("NORTHSTAR_URL", "http://localhost:5173")).netloc}
+    )
     allowed_actions: frozenset[str] = frozenset(
         {
             "fill",
