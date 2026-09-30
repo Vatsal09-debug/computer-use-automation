@@ -1,5 +1,6 @@
 from app.discovery.executor import DiscoveryActionExecutor
 from app.discovery.observation import ObservationBuilder
+from app.discovery.recorder import DiscoveryRecorder
 from app.llm.openrouter_provider import OpenRouterProvider
 from app.replay.surface import PlaywrightSurface
 
@@ -16,6 +17,7 @@ class DiscoveryEngine:
         self.max_steps = max_steps
         self.observer = ObservationBuilder()
         self.executor = DiscoveryActionExecutor(surface)
+        self.recorder = DiscoveryRecorder()
 
     async def run(self, goal: str) -> list[dict[str, object]]:
         history: list[dict[str, object]] = []
@@ -36,6 +38,12 @@ class DiscoveryEngine:
             }
 
             history.append(event)
+
+            self.recorder.record(
+                step=step,
+                observation=observation,
+                decision=decision.model_dump(),
+            )
 
             print(
                 f"Step {step}: "

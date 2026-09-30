@@ -43,8 +43,15 @@ class OpenRouterProvider:
                         "Use ONLY a target value that appears in observation.elements[].target. "
                         "Use observation.visible_text as informational evidence about the current page state. "
                         "Do NOT invent targets. "
-                        "Prefer actions that make the workflow reusable for the requested input rather than "
-                        "clicking a hardcoded demonstration record when an input field is available. "
+                        "Prefer actions that make the workflow reusable for the requested input. "
+                        "When the goal provides a value such as a member ID and the page exposes an input "
+                        "field for that value, use that input field and its associated action instead of "
+                        "clicking a hardcoded demonstration record. "
+                        "Do not use demonstration shortcuts when they bypass the requested input parameter. "
+                        "For a lookup or search goal, entering an identifier is not sufficient to complete the goal: "
+                        "perform the search action and verify that the resulting state corresponds to the requested "
+                        "identifier before using type='done'. Do not treat pre-existing registry/table data as proof "
+                        "that a new lookup was completed. "
                         "If the goal has been achieved and the required information is visible, use type='done'. "
                         "Allowed actions are: click, fill, press_key, wait, assert, extract, done. "
                         "Return ONLY the decision object. "
@@ -70,6 +77,15 @@ class OpenRouterProvider:
             raise RuntimeError("LLM returned no decision")
 
         cleaned = content.strip()
+
+        # Remove an optional Markdown JSON code fence emitted by some models.
+        if cleaned.startswith("```") and cleaned.endswith("```"):
+            lines = cleaned.splitlines()
+            if lines and lines[0].strip().lower() in {"```json", "```"}:
+                lines = lines[1:]
+            if lines and lines[-1].strip() == "```":
+                lines = lines[:-1]
+            cleaned = "\n".join(lines).strip()
 
         # Accept strict JSON first.
         try:
