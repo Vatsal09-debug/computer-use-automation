@@ -38,14 +38,18 @@ class OpenRouterProvider:
                 {
                     "role": "system",
                     "content": (
-                        "You are a computer-use discovery agent. "
+                        "You are a computer-use discovery agent operating a live enterprise UI. "
                         "Choose exactly one next UI action toward the user's goal. "
-                        "Use only targets present in the observation. "
+                        "Use ONLY a target value that appears in observation.elements[].target. "
+                        "Use observation.visible_text as informational evidence about the current page state. "
+                        "Do NOT invent targets. "
+                        "Prefer actions that make the workflow reusable for the requested input rather than "
+                        "clicking a hardcoded demonstration record when an input field is available. "
+                        "If the goal has been achieved and the required information is visible, use type='done'. "
                         "Allowed actions are: click, fill, press_key, wait, assert, extract, done. "
-                        "Do not invent targets. "
-                        "Return ONLY valid JSON with these fields: "
-                        "type, target, value, key, reason. "
-                        "If the goal is complete, use type='done'."
+                        "Return ONLY the decision object. "
+                        "Do not return explanations, Markdown, code blocks, or safety commentary. "
+                        "The decision must contain exactly these fields: type, target, value, key, reason."
                     ),
                 },
                 {
@@ -74,10 +78,43 @@ class OpenRouterProvider:
             # Some free models return Python-style dict syntax.
             try:
                 data = ast.literal_eval(cleaned)
-            except (ValueError, SyntaxError) as exc:
-                raise RuntimeError(
-                    f"LLM returned an unsupported decision format: {content}"
-                ) from exc
+            except (ValueError, SyntaxError):
+                # Some models emit a tool-call-like wrapper instead of JSON.
+                # Extract only the inner action expression; Pydantic below
+                # still validates the resulting decision structure.
+                prefix = "["
+                suffix = "]<|tool_call_end|>"
+
+                if "<|tool_call_start|>" in cleaned and "<|tool_call_end|>" in cleaned:
+                    inner = cleaned.split("<|tool_call_start|>", 1)[1]
+                    inner = inner.split("<|tool_call_end|>", 1)[0].strip()
+
+                    if inner.startswith("[") and inner.endswith("]"):
+                        inner = inner[1:-1].strip()
+
+                    if "(" not in inner or not inner.endswith(")"):
+                        raise RuntimeError(
+                            f"LLM returned an unsupported decision format: {content}"
+                        )
+
+                    action_type, arguments = inner.split("(", 1)
+                    arguments = arguments[:-1]
+
+                    data = {"type": action_type.strip()}
+
+                    for part in arguments.split(","):
+                        key, value = part.split("=", 1)
+                        key = key.strip()
+                        value = value.strip()
+
+                        if value.startswith("'") and value.endswith("'"):
+                            value = value[1:-1]
+
+                        data[key] = value
+                else:
+                    raise RuntimeError(
+                        f"LLM returned an unsupported decision format: {content}"
+                    )
 
         if not isinstance(data, dict):
             raise RuntimeError(

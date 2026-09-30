@@ -29,8 +29,11 @@ class ObservationBuilder:
             """
         )
 
+        visible_text = await page.locator("body").inner_text()
+
         return {
             "url": page.url,
             "title": await page.title(),
             "elements": elements,
+            "visible_text": visible_text.strip(),
         }
