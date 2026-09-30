@@ -1,0 +1,55 @@
+{"event": "action_started", "step_id": "navigate_to_members", "action": "click"}
+{"event": "action_completed", "step_id": "navigate_to_members", "action": "click", "status": "success"}
+{"event": "action_started", "step_id": "fill_member_id", "action": "fill"}
+{"event": "action_completed", "step_id": "fill_member_id", "action": "fill", "status": "success"}
+{"event": "action_started", "step_id": "search_member", "action": "click"}
+{"event": "action_completed", "step_id": "search_member", "action": "click", "status": "success"}
+{"event": "action_started", "step_id": "wait_for_member", "action": "wait"}
+{"event": "action_completed", "step_id": "wait_for_member", "action": "wait", "status": "success"}
+{"event": "action_started", "step_id": "verify_member", "action": "assert"}
+{"event": "action_completed", "step_id": "verify_member", "action": "assert", "status": "success"}
+{"event": "action_started", "step_id": "extract_balance", "action": "extract"}
+{"event": "action_completed", "step_id": "extract_balance", "action": "extract", "status": "success"}
+{"event": "replay_completed", "status": "success", "checkpoint": "extract_balance"}
+{"event": "action_started", "step_id": "navigate_to_members", "action": "click"}
+{"event": "action_completed", "step_id": "navigate_to_members", "action": "click", "status": "success"}
+{"event": "action_started", "step_id": "fill_member_id", "action": "fill"}
+{"event": "action_completed", "step_id": "fill_member_id", "action": "fill", "status": "success"}
+{"event": "action_started", "step_id": "search_member", "action": "click"}
+{"event": "replay_stopped", "status": "business_outcome", "step_id": "search_member", "category": "member_not_found", "expected": "Member record exists", "observed": "!\nMember lookup unsuccessful\n\nNo member record was found for this identifier. Verify the member ID and try again."}
+{"event": "action_started", "step_id": "wait_for_missing_target", "action": "wait"}
+{"event": "replay_stopped", "status": "recoverable", "step_id": "wait_for_missing_target", "category": "transient_timeout", "expected": "Target becomes visible within the configured timeout", "observed": "Locator.wait_for: Timeout 100ms exceeded.\nCall log:\n  - waiting for get_by_test_id(\"temporary-target-that-does-not-exist\") to be visible\n"}
+{"event": "action_started", "step_id": "click_missing_target", "action": "click"}
+{"event": "replay_stopped", "status": "failure", "step_id": "click_missing_target", "category": "execution_error", "expected": "Action click completes successfully", "observed": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for get_by_test_id(\"target-that-does-not-exist\")\n", "evidence": "evidence/failure-click_missing_target.png"}
+{"event": "action_started", "step_id": "navigate_to_members", "action": "click"}
+{"event": "action_completed", "step_id": "navigate_to_members", "action": "click", "status": "success"}
+{"event": "replay_stopped", "status": "failure", "step_id": "fill_member_id", "category": "safety_blocked", "expected": "Action is allowed by the safety policy", "observed": "Blocked action type by safety policy: fill"}
+{"event": "human_handoff_requested", "step_id": "search_member", "reason": "Human intervention required before action 'search_member'"}
+{"event": "human_action", "action": "click", "target": "search-member"}
+{"event": "human_handoff_resumed", "step_id": "search_member"}
+{"event": "action_started", "step_id": "navigate_to_members", "action": "click"}
+{"event": "action_completed", "step_id": "navigate_to_members", "action": "click", "status": "success"}
+{"event": "action_started", "step_id": "fill_member_id", "action": "fill"}
+{"event": "action_completed", "step_id": "fill_member_id", "action": "fill", "status": "success"}
+{"event": "action_started", "step_id": "search_member", "action": "click"}
+{"event": "action_completed", "step_id": "search_member", "action": "click", "status": "success"}
+{"event": "action_started", "step_id": "wait_for_member", "action": "wait"}
+{"event": "action_completed", "step_id": "wait_for_member", "action": "wait", "status": "success"}
+{"event": "action_started", "step_id": "verify_member", "action": "assert"}
+{"event": "action_completed", "step_id": "verify_member", "action": "assert", "status": "success"}
+{"event": "action_started", "step_id": "extract_balance", "action": "extract"}
+{"event": "action_completed", "step_id": "extract_balance", "action": "extract", "status": "success"}
+{"event": "replay_completed", "status": "success", "checkpoint": "extract_balance"}
+{"event": "action_started", "step_id": "navigate_to_members", "action": "click"}
+{"event": "action_completed", "step_id": "navigate_to_members", "action": "click", "status": "success"}
+{"event": "action_started", "step_id": "fill_member_id", "action": "fill"}
+{"event": "action_completed", "step_id": "fill_member_id", "action": "fill", "status": "success"}
+{"event": "action_started", "step_id": "search_member", "action": "click"}
+{"event": "replay_stopped", "status": "business_outcome", "step_id": "search_member", "category": "member_not_found", "expected": "Member record exists", "observed": "!\nMember lookup unsuccessful\n\nNo member record was found for this identifier. Verify the member ID and try again."}
+{"event": "action_started", "step_id": "wait_for_missing_target", "action": "wait"}
+{"event": "replay_stopped", "status": "recoverable", "step_id": "wait_for_missing_target", "category": "transient_timeout", "expected": "Target becomes visible within the configured timeout", "observed": "Locator.wait_for: Timeout 100ms exceeded.\nCall log:\n  - waiting for get_by_test_id(\"temporary-target-that-does-not-exist\") to be visible\n"}
+{"event": "action_started", "step_id": "click_missing_target", "action": "click"}
+{"event": "replay_stopped", "status": "failure", "step_id": "click_missing_target", "category": "execution_error", "expected": "Action click completes successfully", "observed": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for get_by_test_id(\"target-that-does-not-exist\")\n", "evidence": "evidence/failure-click_missing_target.png"}
+{"event": "action_started", "step_id": "navigate_to_members", "action": "click"}
+{"event": "action_completed", "step_id": "navigate_to_members", "action": "click", "status": "success"}
+{"event": "replay_stopped", "status": "failure", "step_id": "fill_member_id", "category": "safety_blocked", "expected": "Action is allowed by the safety policy", "observed": "Blocked action type by safety policy: fill"}

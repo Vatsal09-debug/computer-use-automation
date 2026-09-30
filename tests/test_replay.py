@@ -3,6 +3,7 @@ import pytest
 from playwright.async_api import async_playwright
 
 from app.artifact.factory import build_lookup_member_balance_recipe
+from app.safety.policy import SafetyPolicy
 from app.artifact.schema import Recipe
 from app.replay.engine import ReplayEngine
 from app.replay.surface import PlaywrightSurface
@@ -32,15 +33,18 @@ async def test_lookup_member_balance_replay(
 
         result = await engine.run(
             recipe,
-            {"member_id": "12345"},
+            {"member_id": member_id},
         )
 
         await browser.close()
 
-    print(result.model_dump())
-    assert result.status == "success"
-    print(result.model_dump())
-    assert str(result.outputs["savings_balance"]) == "4250.00"
+    assert result.status == expected_status
+
+    if expected_status == "success":
+        assert str(result.outputs["savings_balance"]) == "4250.00"
+    else:
+        assert result.failure is not None
+        assert result.failure.category == "member_not_found"
 
 
 @pytest.mark.asyncio
@@ -145,3 +149,37 @@ async def test_replay_hard_failure_captures_evidence() -> None:
     assert result.failure.step_id == "click_missing_target"
     assert result.failure.evidence is not None
     assert Path(result.failure.evidence).exists()
+
+
+@pytest.mark.asyncio
+async def test_replay_blocks_disallowed_action() -> None:
+    recipe = build_lookup_member_balance_recipe()
+
+    safety_policy = SafetyPolicy(
+        allowed_actions=frozenset({"click"}),
+    )
+
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch(
+            headless=True,
+            executable_path="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        )
+        page = await browser.new_page()
+        await page.goto("http://localhost:5173")
+
+        engine = ReplayEngine(
+            PlaywrightSurface(page),
+            safety_policy=safety_policy,
+        )
+
+        result = await engine.run(
+            recipe,
+            {"member_id": "12345"},
+        )
+
+        await browser.close()
+
+    assert result.status == "failure"
+    assert result.failure is not None
+    assert result.failure.category == "safety_blocked"
+    assert result.failure.step_id == "fill_member_id"

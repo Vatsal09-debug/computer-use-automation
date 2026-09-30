@@ -20,7 +20,6 @@ env/
 .vscode/
 
 # Generated evidence and browser artifacts
-evidence/
 artifacts/
 screenshots/
 videos/

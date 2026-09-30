@@ -7,6 +7,7 @@ ReplayStatus = Literal[
     "success",
     "business_outcome",
     "recoverable",
+    "needs_human",
     "failure",
 ]
 

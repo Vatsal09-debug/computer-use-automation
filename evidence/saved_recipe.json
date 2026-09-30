@@ -1,0 +1,96 @@
+{
+  "schema_version": "1.0",
+  "artifact_id": "lookup_member_balance",
+  "name": "Lookup Member Balance",
+  "version": "1.0",
+  "goal": "Look up a member and return their current savings balance",
+  "surface": {
+    "type": "web",
+    "application": "northstar-banking",
+    "version": "1.0"
+  },
+  "inputs": {
+    "member_id": {
+      "type": "string",
+      "required": true,
+      "description": "Northstar member identifier"
+    }
+  },
+  "actions": [
+    {
+      "id": "navigate_to_members",
+      "type": "click",
+      "target": {
+        "id": "nav_members",
+        "strategy": "test_id",
+        "value": "nav-members",
+        "robustness": "Stable application-provided test identifier for the primary Members navigation."
+      }
+    },
+    {
+      "id": "fill_member_id",
+      "type": "fill",
+      "target": {
+        "id": "member_id",
+        "strategy": "test_id",
+        "value": "member-id",
+        "robustness": "Stable application-provided test identifier."
+      },
+      "value": "{{member_id}}"
+    },
+    {
+      "id": "search_member",
+      "type": "click",
+      "target": {
+        "id": "search_member",
+        "strategy": "test_id",
+        "value": "search-member",
+        "robustness": "Stable application-provided test identifier."
+      }
+    },
+    {
+      "id": "wait_for_member",
+      "type": "wait",
+      "target": {
+        "id": "member_name",
+        "strategy": "test_id",
+        "value": "member-name",
+        "robustness": "Stable application-provided test identifier."
+      },
+      "condition": "visible",
+      "timeout_ms": 5000
+    },
+    {
+      "id": "verify_member",
+      "type": "assert",
+      "target": {
+        "id": "member_id_result",
+        "strategy": "test_id",
+        "value": "member-id-result",
+        "robustness": "Stable application-provided test identifier."
+      },
+      "assertion": "text_contains",
+      "expected": "{{member_id}}"
+    },
+    {
+      "id": "extract_balance",
+      "type": "extract",
+      "target": {
+        "id": "savings_balance",
+        "strategy": "test_id",
+        "value": "savings-balance",
+        "robustness": "Stable application-provided test identifier."
+      },
+      "output": "savings_balance"
+    }
+  ],
+  "outputs": {
+    "savings_balance": {
+      "type": "money",
+      "description": "Current savings account balance"
+    }
+  },
+  "success": {
+    "checkpoint": "extract_balance"
+  }
+}

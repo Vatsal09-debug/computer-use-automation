@@ -63,13 +63,6 @@ class DiscoveryActionExecutor:
                 robustness="Target was observed as a visible element with a stable data-testid.",
             )
         else:
-            index = target.get("index")
-
-            if not isinstance(index, int):
-                raise ValueError(
-                    f"Observed target '{decision.target}' has no resolvable index"
-                )
-
             target_spec = None
 
         if target_spec is not None:
@@ -103,10 +96,33 @@ class DiscoveryActionExecutor:
                 await self.surface.read_text(target_spec)
 
         else:
-            index = target["index"]
-            locator = self.surface.page.locator(
-                "button:visible, a:visible, input:visible, textarea:visible, select:visible"
-            ).nth(index)
+            semantic_text = target.get("text", "").strip()
+            tag = target.get("tag", "")
+
+            if not semantic_text or not isinstance(tag, str) or not tag:
+                raise ValueError(
+                    f"Semantic target '{decision.target}' does not contain usable target metadata"
+                )
+
+            normalized_target = " ".join(semantic_text.split())
+
+            candidates = self.surface.page.locator(f"{tag}:visible")
+            matches = []
+
+            for index in range(await candidates.count()):
+                candidate_text = " ".join(
+                    (await candidates.nth(index).inner_text()).split()
+                )
+                if candidate_text == normalized_target:
+                    matches.append(candidates.nth(index))
+
+            if len(matches) != 1:
+                raise ValueError(
+                    f"Semantic target '{decision.target}' did not resolve uniquely "
+                    f"from observed tag/text"
+                )
+
+            locator = matches[0]
 
             if decision.type == "click":
                 await locator.click()

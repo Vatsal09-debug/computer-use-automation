@@ -16,13 +16,19 @@ from app.replay.result import FailureDetail, ReplayResult
 from app.replay.surface import PlaywrightSurface
 from app.evidence.recorder import EvidenceRecorder
 from app.evidence.logger import EvidenceLogger
+from app.safety.policy import SafetyPolicy
 
 
 class ReplayEngine:
-    def __init__(self, surface: PlaywrightSurface) -> None:
+    def __init__(
+        self,
+        surface: PlaywrightSurface,
+        safety_policy: SafetyPolicy | None = None,
+    ) -> None:
         self.surface = surface
         self.evidence = EvidenceRecorder()
         self.logger = EvidenceLogger()
+        self.safety = safety_policy or SafetyPolicy()
 
     async def run(
         self,
@@ -32,9 +38,55 @@ class ReplayEngine:
         try:
             self._validate_inputs(recipe, inputs)
 
+            try:
+                self.safety.check_url(self.surface.page.url)
+            except PermissionError as exc:
+                self.logger.log(
+                    {
+                        "event": "replay_stopped",
+                        "status": "failure",
+                        "step_id": "replay_start",
+                        "category": "safety_blocked",
+                        "expected": "Current page origin is allowed",
+                        "observed": str(exc),
+                    }
+                )
+                return ReplayResult(
+                    status="failure",
+                    failure=FailureDetail(
+                        category="safety_blocked",
+                        step_id="replay_start",
+                        expected="Current page origin is allowed",
+                        observed=str(exc),
+                    ),
+                )
+
             outputs: dict[str, object] = {}
 
             for action in recipe.actions:
+                try:
+                    self.safety.check_action(action.type)
+                except PermissionError as exc:
+                    self.logger.log(
+                        {
+                            "event": "replay_stopped",
+                            "status": "failure",
+                            "step_id": action.id,
+                            "category": "safety_blocked",
+                            "expected": "Action is allowed by the safety policy",
+                            "observed": str(exc),
+                        }
+                    )
+                    return ReplayResult(
+                        status="failure",
+                        failure=FailureDetail(
+                            category="safety_blocked",
+                            step_id=action.id,
+                            expected="Action is allowed by the safety policy",
+                            observed=str(exc),
+                        ),
+                    )
+
                 self.logger.log(
                     {
                         "event": "action_started",
@@ -62,6 +114,14 @@ class ReplayEngine:
                                     robustness="Stable application-provided test identifier for the search outcome message.",
                                 )
                             )
+
+                            try:
+                                await search_error.wait_for(
+                                    state="visible",
+                                    timeout=1000,
+                                )
+                            except PlaywrightTimeoutError:
+                                pass
 
                             if await search_error.is_visible():
                                 observed = (await search_error.inner_text()).strip()
@@ -168,6 +228,17 @@ class ReplayEngine:
                     evidence_path = await self.evidence.capture_screenshot(
                         self.surface.page,
                         f"failure-{action.id}",
+                    )
+                    self.logger.log(
+                        {
+                            "event": "replay_stopped",
+                            "status": "failure",
+                            "step_id": action.id,
+                            "category": "execution_error",
+                            "expected": f"Action {action.type} completes successfully",
+                            "observed": str(exc),
+                            "evidence": evidence_path,
+                        }
                     )
                     return ReplayResult(
                         status="failure",

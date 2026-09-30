@@ -1,15 +1,16 @@
 from app.discovery.executor import DiscoveryActionExecutor
 from app.discovery.observation import ObservationBuilder
 from app.discovery.recorder import DiscoveryRecorder
-from app.llm.openrouter_provider import OpenRouterProvider
+from app.llm.anthropic_provider import AnthropicProvider
 from app.replay.surface import PlaywrightSurface
+from app.safety.policy import SafetyPolicy
 
 
 class DiscoveryEngine:
     def __init__(
         self,
         surface: PlaywrightSurface,
-        provider: OpenRouterProvider,
+        provider: AnthropicProvider,
         max_steps: int = 12,
     ) -> None:
         self.surface = surface
@@ -18,6 +19,7 @@ class DiscoveryEngine:
         self.observer = ObservationBuilder()
         self.executor = DiscoveryActionExecutor(surface)
         self.recorder = DiscoveryRecorder()
+        self.safety = SafetyPolicy()
 
     async def run(self, goal: str) -> list[dict[str, object]]:
         history: list[dict[str, object]] = []
@@ -55,7 +57,32 @@ class DiscoveryEngine:
             if decision.type == "done":
                 return history
 
-            await self.executor.execute(decision, observation)
+            self.safety.check_action(decision.type)
+
+            try:
+                await self.executor.execute(decision, observation)
+            except (ValueError, TimeoutError) as exc:
+                failure_event = {
+                    "step": step,
+                    "type": "action_failed",
+                    "action": decision.model_dump(),
+                    "error": str(exc),
+                }
+
+                history.append(failure_event)
+
+                self.recorder.record_failure(
+                    step=step,
+                    action=decision.model_dump(),
+                    error=str(exc),
+                )
+
+                print(
+                    f"Action failed at step {step}: {exc}. "
+                    "The next LLM decision will receive this failure context."
+                )
+
+                continue
 
         raise RuntimeError(
             f"Discovery exceeded maximum of {self.max_steps} steps"
